@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rasmni Hajmini Kichraytirish va Base64 Kodni Ko'rish</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        #canvas {
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #eaeaea;
+            max-width: 100%;
+            max-height: 300px;
+        }
+
+        #sizeSlider {
+            margin: 20px 0;
+            width: 100%;
+            -webkit-appearance: none;
+            background: #ddd;
+            height: 6px;
+            border-radius: 5px;
+        }
+
+        #sizeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #007bff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        #sizeSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #007bff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        #base64Output {
+            margin: 20px 0;
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            overflow: auto;
+            resize: vertical;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: inline-block;
+            color: #333;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        textarea {
+            display: none;
+        }
+        
+        .container .size_edit {
+            display: none;
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+    <label for="imageInput">Faylni tanlang:</label>
+        <div class="file-upload">
+            <input type="file"  id="imageInput" accept="image/*">
+        </div>
+        
+        <canvas id="canvas"></canvas>
+        
+        <div class="size_edit">
+            <label for="sizeSlider">Rasm hajmini kichraytirish:</label>
+            <input type="range" id="sizeSlider" min="10" max="100" value="100">
+        </div>
+        
+        <textarea id="base64Output" readonly></textarea>
+        
+    </div>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const base64Output = document.getElementById('base64Output');
+
+        imageInput.addEventListener('change', handleImageUpload);
+        sizeSlider.addEventListener('input', resizeImage);
+
+        let originalImage = new Image();
+        const targetSize = 128;
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    originalImage.onload = function() {
+                        canvas.width = targetSize;
+                        canvas.height = targetSize;
+                        drawImage(targetSize);
+                    };
+                    originalImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function drawImage(size) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const scale = Math.min(originalImage.width / targetSize, originalImage.height / targetSize);
+            const sx = (originalImage.width - targetSize * scale) / 2;
+            const sy = (originalImage.height - targetSize * scale) / 2;
+
+            ctx.drawImage(
+                originalImage,
+                sx, sy, targetSize * scale, targetSize * scale,
+                0, 0, size, size
+            );
+            updateBase64Output();
+        }
+
+        function resizeImage() {
+            const scaleFactor = sizeSlider.value / 100;
+            const newSize = targetSize * scaleFactor;
+            canvas.width = newSize;
+            canvas.height = newSize;
+            drawImage(newSize);
+        }
+
+        function updateBase64Output() {
+            const base64String = canvas.toDataURL("image/png");
+            base64Output.value = base64String;
+        }
+    </script>
+</body>
+</html>
